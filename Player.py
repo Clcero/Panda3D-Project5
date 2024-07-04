@@ -19,7 +19,6 @@ class Spaceship(SphereCollideObject): # Player
 
         self.SetKeyBindings()
         self.EnableHUD()
-
         self._SetMissiles()
         self.taskMgr.add(self.CheckIntervals, 'checkMissiles', 34) # Method to run, name for task, and priority
 
@@ -45,16 +44,19 @@ class Spaceship(SphereCollideObject): # Player
         self.accept('f', self.Fire) # Fire missile
     
     def EnableHUD(self):
+        '''Sets aiming reticle.'''
         self.Hud = OnscreenImage(image = "./Assets/Hud/Reticle3b.png", pos = Vec3(0, 0, 0), scale = 0.1)
         self.Hud.setTransparency(TransparencyAttrib.MAlpha)
 
     # Missiles
     def _SetMissiles(self):
+        '''Defines missile parameters.'''
         self.reloadTime = 0.25
         self.missileDistance = 4000
         self.missileBay = 1
 
     def Fire(self):
+        '''Shoot missile if loaded, otherwise reload.'''
         if self.missileBay: # Check if missile in bay
             travRate = self.missileDistance
 
@@ -79,10 +81,11 @@ class Spaceship(SphereCollideObject): # Player
         else:
             if not self.taskMgr.hasTaskNamed('reload'):
                 print('Preparing reload...')
-                self.taskMgr.doMethodLater(0, self.Reload, 'reload') # Doing it 0 seconds later
+                self.taskMgr.doMethodLater(0, self._Reload, 'reload') # Doing it 0 seconds later
                 return Task.cont
     
-    def Reload(self, task):
+    def _Reload(self, task):
+        '''Called as part of Fire function, loads missile after reload time has passed.'''
         if task.time > self.reloadTime:
             self.missileBay += 1
             
@@ -97,6 +100,7 @@ class Spaceship(SphereCollideObject): # Player
             return Task.cont
 
     def CheckIntervals(self, task):
+        '''Handles missile node detachment and deletion.'''
         for i in Missile.Intervals:
             if not Missile.Intervals[i].isPlaying():
                 Missile.cNodes[i].detachNode()
@@ -107,7 +111,8 @@ class Spaceship(SphereCollideObject): # Player
                 del Missile.cNodes[i]
                 del Missile.collisionSolids[i]
                 print(i + ' has reached the end of its fire solution.')
-                break # Memory still used when dictionary objects are deleted, so we break to refactor.'
+                break # Memory still used when dictionary objects are deleted, so we break to refactor.
+
         return Task.cont
 
     # Movement
